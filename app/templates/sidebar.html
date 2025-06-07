@@ -2,38 +2,44 @@
   <ul class="nav">
     <li class="nav-item">
       <a class="nav-link" href="{{ url_for('dashboard.index') }}">
-        <i class="mdi mdi-grid-large menu-icon"></i>
+        <i class="bi bi-speedometer2 menu-icon"></i>
         <span class="menu-title">Dashboard</span>
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="{{ url_for('kecamatan.index') }}">
-        <i class="mdi mdi-grid-large menu-icon"></i>
+        <i class="bi bi-geo-alt-fill menu-icon"></i>
         <span class="menu-title">Data Kecamatan</span>
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="{{ url_for('desa.index') }}">
-        <i class="mdi mdi-grid-large menu-icon"></i>
+        <i class="bi bi-house-door-fill menu-icon"></i>
         <span class="menu-title">Data Desa</span>
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="{{ url_for('perkebunan.index') }}">
-        <i class="mdi mdi-grid-large menu-icon"></i>
+        <i class="bi bi-tree-fill menu-icon"></i>
         <span class="menu-title">Data Perkebunan</span>
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="{{ url_for('cluster.index') }}">
-        <i class="mdi mdi-grid-large menu-icon"></i>
+        <i class="bi bi-diagram-3-fill menu-icon"></i>
         <span class="menu-title">Cluster</span>
       </a>
     </li>
-     <li class="nav-item">
+    <li class="nav-item">
       <a class="nav-link" href="{{ url_for('gmm.index') }}">
-        <i class="mdi mdi-grid-large menu-icon"></i>
+        <i class="bi bi-bar-chart-fill menu-icon"></i>
         <span class="menu-title">Hasil GMM</span>
+      </a>
+    </li>
+    <li class="nav-item mt-auto">
+      <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+        <i class="bi bi-box-arrow-right menu-icon"></i>
+        <span class="menu-title">Keluar</span>
       </a>
     </li>
   </ul>

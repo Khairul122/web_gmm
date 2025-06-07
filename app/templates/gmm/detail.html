@@ -1,200 +1,623 @@
 {% extends "layout.html" %}
 
-{% block title %}Detail GMM Clustering{% endblock %}
+{% block title %}Detail GMM - {{ data.gmm.desa.nama_desa }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="text-primary">Detail GMM Clustering</h1>
-    <div>
-        <a href="{{ url_for('gmm.index') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Kembali
-        </a>
-    </div>
-</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-eye me-2"></i>
+                            Detail Clustering GMM - {{ data.gmm.desa.nama_desa }}
+                        </h4>
+                        <div>
+                            <a href="{{ url_for('gmm.index') }}" class="btn btn-light btn-sm">
+                                <i class="fas fa-arrow-left me-2"></i>Kembali
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-info-circle"></i> Informasi Umum
-                </h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <td><strong>ID Clustering:</strong></td>
-                        <td>{{ data.gmm.id_clustering }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Desa:</strong></td>
-                        <td>{{ data.gmm.desa.nama_desa }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Kecamatan:</strong></td>
-                        <td>{{ data.gmm.desa.kecamatan.nama_kecamatan }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Cluster:</strong></td>
-                        <td>
-                            <span class="badge 
-                                {% if 'Produksi Rendah' in data.gmm.cluster.nama_cluster %}
-                                    bg-danger
-                                {% elif 'Produksi Menengah' in data.gmm.cluster.nama_cluster %}
-                                    bg-warning
-                                {% elif 'Produksi Tinggi' in data.gmm.cluster.nama_cluster %}
-                                    bg-success
-                                {% else %}
-                                    bg-secondary
-                                {% endif %}
-                            ">
-                                {{ data.gmm.cluster.nama_cluster }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Probabilitas:</strong></td>
-                        <td>
-                            <div class="progress" style="height: 25px;">
-                                <div class="progress-bar 
-                                    {% if data.gmm.probabilitas >= 0.8 %}
-                                        bg-success
-                                    {% elif data.gmm.probabilitas >= 0.6 %}
-                                        bg-warning
-                                    {% else %}
-                                        bg-danger
-                                    {% endif %}
-                                " role="progressbar" 
-                                style="width: {{ (data.gmm.probabilitas * 100) if data.gmm.probabilitas else 0 }}%">
-                                    {{ "%.4f"|format(data.gmm.probabilitas) if data.gmm.probabilitas else "0.0000" }}
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Informasi Desa
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="border-start border-primary border-4 ps-3">
+                                                <small class="text-muted">ID Desa</small>
+                                                <div class="fw-bold fs-5">{{ data.gmm.id_desa }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="border-start border-success border-4 ps-3">
+                                                <small class="text-muted">Nama Desa</small>
+                                                <div class="fw-bold fs-5">{{ data.gmm.desa.nama_desa }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="border-start border-info border-4 ps-3">
+                                                <small class="text-muted">ID Clustering</small>
+                                                <div class="fw-bold fs-5">{{ data.gmm.id_clustering }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="border-start border-warning border-4 ps-3">
+                                                <small class="text-muted">Cluster Assignment</small>
+                                                <div class="fw-bold fs-5">
+                                                    {% if 'Tinggi' in data.gmm.cluster.nama_cluster %}
+                                                        <span class="badge bg-success fs-6">
+                                                            <i class="fas fa-arrow-up me-1"></i>
+                                                            {{ data.gmm.cluster.nama_cluster }}
+                                                        </span>
+                                                    {% elif 'Menengah' in data.gmm.cluster.nama_cluster %}
+                                                        <span class="badge bg-warning fs-6">
+                                                            <i class="fas fa-minus me-1"></i>
+                                                            {{ data.gmm.cluster.nama_cluster }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger fs-6">
+                                                            <i class="fas fa-arrow-down me-1"></i>
+                                                            {{ data.gmm.cluster.nama_cluster }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>Iterasi:</strong></td>
-                        <td><span class="badge bg-secondary">{{ data.gmm.iteration }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Status Konvergensi:</strong></td>
-                        <td>
-                            {% if data.gmm.converged %}
-                                <span class="badge bg-success">
-                                    <i class="bi bi-check-circle"></i> Konvergen
-                                </span>
-                            {% else %}
-                                <span class="badge bg-warning">
-                                    <i class="bi bi-exclamation-circle"></i> Belum Konvergen
-                                </span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
+                        </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-calculator"></i> Mean Vector (μ)
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if data.mean_vector %}
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Feature</th>
-                                    <th>Mean Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in range(data.mean_vector|length) %}
-                                    <tr>
-                                        <td><strong>{{ data.feature_names[i] if i < data.feature_names|length else 'Feature ' + (i+1)|string }}</strong></td>
-                                        <td>
-                                            <code>{{ "%.6f"|format(data.mean_vector[i]) }}</code>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="col-lg-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-chart-line me-2"></i>
+                                        Metrik GMM
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="text-center">
+                                                <div class="position-relative d-inline-block">
+                                                    <canvas id="probabilityGauge" width="120" height="120"></canvas>
+                                                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                                        <div class="fw-bold">{{ "%.3f"|format(data.gmm.probabilitas) if data.gmm.probabilitas else "0.000" }}</div>
+                                                        <small class="text-muted">Probabilitas</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="text-muted">Iterasi</small>
+                                                    <span class="badge bg-secondary">{{ data.gmm.iteration or 0 }}</span>
+                                                </div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-secondary" 
+                                                         role="progressbar" 
+                                                         style="width: {{ (data.gmm.iteration / 100 * 100) if data.gmm.iteration else 0 }}%">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="text-muted">Status Konvergensi</small>
+                                                    {% if data.gmm.converged %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i>Konvergen
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">
+                                                            <i class="fas fa-times me-1"></i>Tidak Konvergen
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <small class="text-muted">Kualitas Assignment</small>
+                                                    {% set prob_value = data.gmm.probabilitas or 0 %}
+                                                    {% if prob_value > 0.8 %}
+                                                        <span class="badge bg-success">Sangat Tinggi</span>
+                                                    {% elif prob_value > 0.6 %}
+                                                        <span class="badge bg-info">Tinggi</span>
+                                                    {% elif prob_value > 0.4 %}
+                                                        <span class="badge bg-warning">Sedang</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Rendah</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                {% else %}
-                    <p class="text-muted">Mean vector tidak tersedia</p>
-                {% endif %}
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-vector-square me-2"></i>
+                                        Mean Vector (Centroid Cluster)
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if data.mean_vector %}
+                                        <div class="row">
+                                            {% for feature_name in data.feature_names %}
+                                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                                <div class="card bg-light h-100">
+                                                    <div class="card-body text-center">
+                                                        <div class="mb-2">
+                                                            {% if feature_name == 'Luas TBM' %}
+                                                                <i class="fas fa-seedling text-info fa-2x"></i>
+                                                            {% elif feature_name == 'Luas TM' %}
+                                                                <i class="fas fa-leaf text-success fa-2x"></i>
+                                                            {% elif feature_name == 'Luas TTM' %}
+                                                                <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                                            {% elif feature_name == 'Produksi' %}
+                                                                <i class="fas fa-weight-hanging text-warning fa-2x"></i>
+                                                            {% else %}
+                                                                <i class="fas fa-users text-primary fa-2x"></i>
+                                                            {% endif %}
+                                                        </div>
+                                                        <h6 class="card-title">{{ feature_name }}</h6>
+                                                        <h4 class="text-primary">{{ "%.3f"|format(data.mean_vector[loop.index0]) if loop.index0 < data.mean_vector|length else "N/A" }}</h4>
+                                                        <small class="text-muted">
+                                                            {% if 'Luas' in feature_name %}Ha{% elif 'Produksi' in feature_name %}Ton{% else %}KK{% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <div class="mt-4">
+                                            <canvas id="meanVectorChart" width="400" height="200"></canvas>
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            Data mean vector tidak tersedia untuk desa ini.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-secondary text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-th me-2"></i>
+                                            Covariance Matrix (Matriks Kovarian)
+                                        </h5>
+                                        <button class="btn btn-light btn-sm" data-bs-toggle="collapse" data-bs-target="#covarianceMatrix">
+                                            <i class="fas fa-eye me-1"></i>Toggle View
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if data.covariance_matrix %}
+                                        <div class="collapse show" id="covarianceMatrix">
+                                            <div class="alert alert-info">
+                                                <h6 class="alert-heading">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Interpretasi Covariance Matrix
+                                                </h6>
+                                                <p class="mb-0">
+                                                    Matriks kovarian menunjukkan hubungan antar fitur dalam cluster ini. 
+                                                    Nilai diagonal menunjukkan variansi setiap fitur, sedangkan nilai off-diagonal menunjukkan kovariansi antar fitur.
+                                                </p>
+                                            </div>
+                                            
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-hover">
+                                                    <thead class="table-dark">
+                                                        <tr>
+                                                            <th>Fitur</th>
+                                                            {% for feature_name in data.feature_names %}
+                                                            <th class="text-center">{{ feature_name }}</th>
+                                                            {% endfor %}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for i in range(data.feature_names|length) %}
+                                                        <tr>
+                                                            <td class="fw-bold bg-light">{{ data.feature_names[i] }}</td>
+                                                            {% for j in range(data.feature_names|length) %}
+                                                            <td class="text-center {% if i == j %}bg-warning bg-opacity-25{% endif %}">
+                                                                {% if i < data.covariance_matrix|length and j < data.covariance_matrix[i]|length %}
+                                                                    {{ "%.4f"|format(data.covariance_matrix[i][j]) }}
+                                                                {% else %}
+                                                                    N/A
+                                                                {% endif %}
+                                                            </td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <canvas id="covarianceHeatmap" width="400" height="300"></canvas>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            Data covariance matrix tidak tersedia untuk desa ini.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-dark text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-lightbulb me-2"></i>
+                                        Interpretasi dan Rekomendasi
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-lg-6 mb-3">
+                                            <h6 class="text-primary">
+                                                <i class="fas fa-chart-line me-2"></i>
+                                                Analisis Clustering
+                                            </h6>
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <p class="mb-2">
+                                                        <strong>Desa {{ data.gmm.desa.nama_desa }}</strong> telah diklasifikasikan ke dalam cluster 
+                                                        <strong>{{ data.gmm.cluster.nama_cluster }}</strong> dengan tingkat kepercayaan 
+                                                        <strong>{{ "%.1f"|format((data.gmm.probabilitas * 100) if data.gmm.probabilitas else 0) }}%</strong>.
+                                                    </p>
+                                                    
+                                                    {% set prob_value = data.gmm.probabilitas or 0 %}
+                                                    {% if prob_value > 0.8 %}
+                                                        <div class="alert alert-success">
+                                                            <i class="fas fa-check-circle me-2"></i>
+                                                            <strong>Klasifikasi Sangat Baik:</strong> Desa ini memiliki karakteristik yang sangat sesuai dengan cluster yang ditentukan.
+                                                        </div>
+                                                    {% elif prob_value > 0.6 %}
+                                                        <div class="alert alert-info">
+                                                            <i class="fas fa-info-circle me-2"></i>
+                                                            <strong>Klasifikasi Baik:</strong> Desa ini memiliki karakteristik yang sesuai dengan cluster yang ditentukan.
+                                                        </div>
+                                                    {% elif prob_value > 0.4 %}
+                                                        <div class="alert alert-warning">
+                                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                                            <strong>Klasifikasi Sedang:</strong> Desa ini memiliki karakteristik campuran, perlu perhatian khusus.
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="alert alert-danger">
+                                                            <i class="fas fa-times-circle me-2"></i>
+                                                            <strong>Klasifikasi Rendah:</strong> Desa ini mungkin memerlukan evaluasi ulang atau intervensi khusus.
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-lg-6 mb-3">
+                                            <h6 class="text-success">
+                                                <i class="fas fa-tasks me-2"></i>
+                                                Rekomendasi Tindakan
+                                            </h6>
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    {% if 'Tinggi' in data.gmm.cluster.nama_cluster %}
+                                                        <ul class="list-unstyled">
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-star text-warning me-2"></i>
+                                                                Pertahankan praktik budidaya yang sudah baik
+                                                            </li>
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-graduation-cap text-primary me-2"></i>
+                                                                Jadikan sebagai desa percontohan
+                                                            </li>
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-arrow-up text-success me-2"></i>
+                                                                Fokus pada peningkatan kualitas produk
+                                                            </li>
+                                                            <li class="mb-0">
+                                                                <i class="fas fa-handshake text-info me-2"></i>
+                                                                Kembangkan kemitraan pemasaran
+                                                            </li>
+                                                        </ul>
+                                                    {% elif 'Menengah' in data.gmm.cluster.nama_cluster %}
+                                                        <ul class="list-unstyled">
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-tools text-primary me-2"></i>
+                                                                Tingkatkan teknik budidaya
+                                                            </li>
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-seedling text-success me-2"></i>
+                                                                Sediakan bibit unggul bersubsidi
+                                                            </li>
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-users text-info me-2"></i>
+                                                                Bentuk kelompok tani
+                                                            </li>
+                                                            <li class="mb-0">
+                                                                <i class="fas fa-tint text-primary me-2"></i>
+                                                                Perbaiki sistem irigasi
+                                                            </li>
+                                                        </ul>
+                                                    {% else %}
+                                                        <ul class="list-unstyled">
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-bullhorn text-danger me-2"></i>
+                                                                Intervensi khusus diperlukan
+                                                            </li>
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-chalkboard-teacher text-warning me-2"></i>
+                                                                Pelatihan intensif dari dasar
+                                                            </li>
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-hand-holding-usd text-success me-2"></i>
+                                                                Bantuan finansial dan input
+                                                            </li>
+                                                            <li class="mb-0">
+                                                                <i class="fas fa-road text-primary me-2"></i>
+                                                                Perbaikan infrastruktur menyeluruh
+                                                            </li>
+                                                        </ul>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Data diambil dari hasil clustering GMM terbaru
+                            </small>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>Cetak Detail
+                            </button>
+                            <a href="{{ url_for('gmm.evaluasi') }}" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="fas fa-analytics me-2"></i>Lihat Evaluasi
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-grid"></i> Covariance Matrix (Σ)
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if data.covariance_matrix %}
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered text-center">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th></th>
-                                    {% for i in range(data.covariance_matrix[0]|length) %}
-                                        <th>{{ data.feature_names[i] if i < data.feature_names|length else 'F' + (i+1)|string }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in range(data.covariance_matrix|length) %}
-                                    <tr>
-                                        <th class="table-dark">{{ data.feature_names[i] if i < data.feature_names|length else 'F' + (i+1)|string }}</th>
-                                        {% for j in range(data.covariance_matrix[i]|length) %}
-                                            <td>
-                                                <code style="font-size: 0.8em;">{{ "%.4f"|format(data.covariance_matrix[i][j]) }}</code>
-                                            </td>
-                                        {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <h6><i class="bi bi-info-circle"></i> Interpretasi Covariance Matrix:</h6>
-                        <ul class="small text-muted">
-                            <li><strong>Diagonal elements:</strong> Variance untuk setiap feature</li>
-                            <li><strong>Off-diagonal elements:</strong> Covariance antar feature</li>
-                            <li><strong>Nilai positif:</strong> Korelasi positif antar feature</li>
-                            <li><strong>Nilai negatif:</strong> Korelasi negatif antar feature</li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <p class="text-muted">Covariance matrix tidak tersedia</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const probability = {{ data.gmm.probabilitas or 0 }};
+    
+    const gaugeCtx = document.getElementById('probabilityGauge').getContext('2d');
+    new Chart(gaugeCtx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [probability, 1 - probability],
+                backgroundColor: [
+                    probability > 0.8 ? '#198754' : 
+                    probability > 0.6 ? '#0dcaf0' : 
+                    probability > 0.4 ? '#ffc107' : '#dc3545',
+                    '#e9ecef'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    {% if data.mean_vector %}
+    const meanVectorCtx = document.getElementById('meanVectorChart').getContext('2d');
+    new Chart(meanVectorCtx, {
+        type: 'radar',
+        data: {
+            labels: {{ data.feature_names | tojson | safe }},
+            datasets: [{
+                label: 'Mean Vector',
+                data: {{ data.mean_vector | tojson | safe }},
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                borderColor: '#0d6efd',
+                borderWidth: 2,
+                pointBackgroundColor: '#0d6efd',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    {% if data.covariance_matrix %}
+    const covarianceCtx = document.getElementById('covarianceHeatmap').getContext('2d');
+    const covMatrix = {{ data.covariance_matrix | tojson | safe }};
+    const featureNames = {{ data.feature_names | tojson | safe }};
+    
+    const heatmapData = [];
+    for (let i = 0; i < covMatrix.length; i++) {
+        for (let j = 0; j < covMatrix[i].length; j++) {
+            heatmapData.push({
+                x: featureNames[j],
+                y: featureNames[i],
+                v: covMatrix[i][j]
+            });
+        }
+    }
+    
+    const maxValue = Math.max(...heatmapData.map(d => Math.abs(d.v)));
+    
+    new Chart(covarianceCtx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Covariance Values',
+                data: heatmapData.map(d => ({
+                    x: featureNames.indexOf(d.x),
+                    y: featureNames.indexOf(d.y),
+                    backgroundColor: d.v >= 0 ? 
+                        `rgba(25, 135, 84, ${Math.abs(d.v) / maxValue})` : 
+                        `rgba(220, 53, 69, ${Math.abs(d.v) / maxValue})`
+                })),
+                pointRadius: 15,
+                showLine: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Covariance Matrix Heatmap'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    min: -0.5,
+                    max: featureNames.length - 0.5,
+                    ticks: {
+                        callback: function(value) {
+                            return featureNames[Math.round(value)] || '';
+                        }
+                    }
+                },
+                y: {
+                    min: -0.5,
+                    max: featureNames.length - 0.5,
+                    ticks: {
+                        callback: function(value) {
+                            return featureNames[Math.round(value)] || '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="bi bi-journal-text"></i> Deskripsi Cluster
-                </h5>
-            </div>
-            <div class="card-body">
-                <p>{{ data.gmm.cluster.deskripsi }}</p>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.border-start {
+    border-left-width: 4px !important;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.table-bordered th, .table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+.bg-warning.bg-opacity-25 {
+    background-color: rgba(255, 193, 7, 0.25) !important;
+}
+
+@media (max-width: 768px) {
+    .col-lg-2, .col-md-4 {
+        margin-bottom: 1rem;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+@media print {
+    .btn, .card-footer, .collapse {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+        page-break-inside: avoid;
+    }
+    
+    .show {
+        display: block !important;
+    }
+}
+</style>
 {% endblock %}

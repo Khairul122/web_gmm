@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models.ClusterModel import Cluster
 from app.models.DesaModel import Desa
 from app.extension import db
+import numpy as np
+from app.models.PerkebunanModel import Perkebunan as DataPerkebunan
 
 cluster_bp = Blueprint('cluster', __name__, url_prefix='/cluster')
 
@@ -9,7 +11,6 @@ cluster_bp = Blueprint('cluster', __name__, url_prefix='/cluster')
 def index():
     data = Cluster.query.join(Desa).order_by(Cluster.nama_cluster.asc()).all()
     
-    # Hitung statistik cluster
     cluster_stats = {
         'tinggi': 0,
         'menengah': 0,
@@ -40,11 +41,134 @@ def hapus(id):
     flash('Data berhasil dihapus', 'info')
     return redirect(url_for('cluster.index'))
 
+@cluster_bp.route('/evaluasi')
+def evaluasi():
+    """
+    Route untuk menampilkan halaman evaluasi model clustering
+    """
+    try:
+        data_cluster = Cluster.query.join(Desa).all()
+        
+        if not data_cluster:
+            flash('Belum ada data clustering. Silakan lakukan analisis BIC terlebih dahulu.', 'warning')
+            return redirect(url_for('cluster.index'))
+        
+        data_perkebunan = DataPerkebunan.query.all()
+        
+        cluster_analysis = {
+            'tinggi': {
+                'count': 0,
+                'avg_luas_tbm': 0,
+                'avg_luas_tm': 0,
+                'avg_luas_ttm': 0,
+                'avg_produksi': 0,
+                'avg_petani': 0,
+                'desa_list': []
+            },
+            'menengah': {
+                'count': 0,
+                'avg_luas_tbm': 0,
+                'avg_luas_tm': 0,
+                'avg_luas_ttm': 0,
+                'avg_produksi': 0,
+                'avg_petani': 0,
+                'desa_list': []
+            },
+            'rendah': {
+                'count': 0,
+                'avg_luas_tbm': 0,
+                'avg_luas_tm': 0,
+                'avg_luas_ttm': 0,
+                'avg_produksi': 0,
+                'avg_petani': 0,
+                'desa_list': []
+            }
+        }
+        
+        for cluster_item in data_cluster:
+            data_kebun = next((d for d in data_perkebunan if d.id_desa == cluster_item.id_desa), None)
+            
+            if data_kebun:
+                cluster_key = None
+                if 'Produksi Tinggi' in cluster_item.nama_cluster:
+                    cluster_key = 'tinggi'
+                elif 'Produksi Menengah' in cluster_item.nama_cluster:
+                    cluster_key = 'menengah'
+                elif 'Produksi Rendah' in cluster_item.nama_cluster:
+                    cluster_key = 'rendah'
+                
+                if cluster_key:
+                    cluster_analysis[cluster_key]['count'] += 1
+                    cluster_analysis[cluster_key]['avg_luas_tbm'] += float(data_kebun.luas_tbm or 0)
+                    cluster_analysis[cluster_key]['avg_luas_tm'] += float(data_kebun.luas_tm or 0)
+                    cluster_analysis[cluster_key]['avg_luas_ttm'] += float(data_kebun.luas_ttm or 0)
+                    cluster_analysis[cluster_key]['avg_produksi'] += float(data_kebun.produksi_ton or 0)
+                    cluster_analysis[cluster_key]['avg_petani'] += int(data_kebun.jumlah_petani_kk or 0)
+                    cluster_analysis[cluster_key]['desa_list'].append({
+                        'nama_desa': cluster_item.desa.nama_desa,
+                        'luas_tbm': float(data_kebun.luas_tbm or 0),
+                        'luas_tm': float(data_kebun.luas_tm or 0),
+                        'luas_ttm': float(data_kebun.luas_ttm or 0),
+                        'produksi': float(data_kebun.produksi_ton or 0),
+                        'petani': int(data_kebun.jumlah_petani_kk or 0)
+                    })
+        
+        for cluster_key in cluster_analysis:
+            if cluster_analysis[cluster_key]['count'] > 0:
+                count = cluster_analysis[cluster_key]['count']
+                cluster_analysis[cluster_key]['avg_luas_tbm'] = round(cluster_analysis[cluster_key]['avg_luas_tbm'] / count, 2)
+                cluster_analysis[cluster_key]['avg_luas_tm'] = round(cluster_analysis[cluster_key]['avg_luas_tm'] / count, 2)
+                cluster_analysis[cluster_key]['avg_luas_ttm'] = round(cluster_analysis[cluster_key]['avg_luas_ttm'] / count, 2)
+                cluster_analysis[cluster_key]['avg_produksi'] = round(cluster_analysis[cluster_key]['avg_produksi'] / count, 2)
+                cluster_analysis[cluster_key]['avg_petani'] = round(cluster_analysis[cluster_key]['avg_petani'] / count, 2)
+        
+        visualization_data = []
+        for cluster_item in data_cluster:
+            data_kebun = next((d for d in data_perkebunan if d.id_desa == cluster_item.id_desa), None)
+            if data_kebun:
+                visualization_data.append({
+                    'nama_desa': cluster_item.desa.nama_desa,
+                    'cluster': cluster_item.nama_cluster,
+                    'luas_tm': float(data_kebun.luas_tm or 0),
+                    'produksi': float(data_kebun.produksi_ton or 0),
+                    'petani': int(data_kebun.jumlah_petani_kk or 0)
+                })
+        
+        rekomendasi = {
+            'tinggi': [
+                "Pertahankan dan tingkatkan praktik budidaya yang sudah baik",
+                "Jadikan sebagai desa percontohan untuk transfer teknologi",
+                "Fokus pada peningkatan kualitas dan nilai tambah produk",
+                "Pengembangan infrastruktur pemasaran dan pengolahan"
+            ],
+            'menengah': [
+                "Peningkatan teknik budidaya melalui pelatihan intensif",
+                "Penyediaan pupuk dan bibit unggul dengan subsidi",
+                "Pembentukan kelompok tani untuk sharing knowledge",
+                "Perbaikan sistem irigasi dan infrastruktur pertanian"
+            ],
+            'rendah': [
+                "Intervensi khusus melalui program pendampingan intensif",
+                "Pelatihan teknik budidaya dari dasar",
+                "Bantuan bibit unggul dan pupuk bersubsidi tinggi",
+                "Perbaikan infrastruktur pertanian secara menyeluruh",
+                "Program kredit mikro untuk petani"
+            ]
+        }
+        
+        return render_template('gmm/evaluasi.html', 
+                             cluster_analysis=cluster_analysis,
+                             visualization_data=visualization_data,
+                             rekomendasi=rekomendasi,
+                             total_desa=len(data_cluster))
+        
+    except Exception as e:
+        flash(f'Error dalam evaluasi model: {str(e)}', 'error')
+        return redirect(url_for('cluster.index'))
+
 @cluster_bp.route('/analisis-bic')
 def analisis_bic():
-    try:
-        from app.models.DataPerkebunanModel import DataPerkebunan
-        
+    try:   
         data_perkebunan = DataPerkebunan.query.all()
         
         if not data_perkebunan:

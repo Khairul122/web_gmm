@@ -11,6 +11,8 @@ class GMM(db.Model):
     covariance_matrix = db.Column(db.Text)
     iteration = db.Column(db.Integer)
     converged = db.Column(db.Boolean)
+    silhouette_score = db.Column(db.Float)         
+    davies_bouldin_index = db.Column(db.Float)
 
     desa = db.relationship('Desa', backref=db.backref('gmm_clustering', lazy=True))
     cluster = db.relationship('Cluster', backref=db.backref('gmm_clustering', lazy=True))

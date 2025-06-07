@@ -1,8 +1,49 @@
 {% extends "layout.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home - Clustering Kakao{% endblock %}
 
 {% block content %}
-<h1 class="text-primary">Selamat datang di Web Flask + Bootstrap 5!</h1>
-<img src="{{ url_for('static', filename='img/logo.png') }}" width="150">
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="text-primary mb-3">Clustering Daerah Penghasil Kakao</h1>
+        <h2 class="text-secondary h4 mb-4">Menggunakan Algoritma Gaussian Mixture Model (GMM)</h2>
+        <p class="text-muted">Studi Kasus: Kabupaten Aceh Tenggara</p>
+        
+        <div class="mt-4">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" width="120" class="img-fluid">
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-4 text-center">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-chart-pie text-primary fa-3x mb-3"></i>
+                    <h5>Data Perkebunan</h5>
+                    <p class="text-muted">Kelola data perkebunan kakao di setiap desa</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-center">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-sitemap text-success fa-3x mb-3"></i>
+                    <h5>Clustering GMM</h5>
+                    <p class="text-muted">Pengelompokan daerah menggunakan algoritma GMM</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-center">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-chart-bar text-warning fa-3x mb-3"></i>
+                    <h5>Analisis</h5>
+                    <p class="text-muted">Evaluasi dan visualisasi hasil clustering</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
