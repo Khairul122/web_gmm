@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard Analisis Clustering{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-primary">Dashboard Analisis Clustering</h1>
+    <div>
+        <a href="{{ url_for('gmm.evaluasi_model') }}" class="btn btn-info me-2">
+            <i class="bi bi-graph-up"></i> Evaluasi Model
+        </a>
+        <a href="{{ url_for('gmm.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-geo-alt display-4 mb-2"></i>
+                <h3>{{ data.total_desa }}</h3>
+                <p>Total Desa Teranalisis</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-diagram-3 display-4 mb-2"></i>
+                <h3>{{ data.total_clusters }}</h3>
+                <p>Cluster Terbentuk</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle display-4 mb-2"></i>
+                <h3>GMM</h3>
+                <p>Metode Clustering</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for cluster_name, cluster_data in data.cluster_analysis.items() %}
+<div class="card mb-4">
+    <div class="card-header 
+        {% if 'Produksi Tinggi' in cluster_name %}
+            bg-success text-white
+        {% elif 'Produksi Menengah' in cluster_name %}
+            bg-warning text-white
+        {% elif 'Produksi Rendah' in cluster_name %}
+            bg-danger text-white
+        {% else %}
+            bg-secondary text-white
+        {% endif %}
+    ">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="mb-0">
+                    <i class="bi bi-diagram-2"></i> {{ cluster_name }}
+                </h4>
+                <small>{{ cluster_data.count }} desa | Tingkat kepercayaan: {{ "%.1f"|format(cluster_data.avg_probability * 100) }}%</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="progress bg-light" style="height: 8px;">
+                    <div class="progress-bar bg-white" role="progressbar" 
+                         style="width: {{ (cluster_data.avg_probability * 100) }}%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6><i class="bi bi-trophy"></i> Kekuatan</h6>
+                <ul class="list-unstyled">
+                    {% for strength in cluster_data.characteristics.strengths %}
+                        <li><i class="bi bi-check-circle text-success"></i> {{ strength }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="col-md-4">
+                <h6><i class="bi bi-exclamation-triangle"></i> Tantangan</h6>
+                <ul class="list-unstyled">
+                    {% for challenge in cluster_data.characteristics.challenges %}
+                        <li><i class="bi bi-exclamation-circle text-warning"></i> {{ challenge }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="col-md-4">
+                <h6><i class="bi bi-lightbulb"></i> Rekomendasi Strategis</h6>
+                <ul class="list-unstyled">
+                    {% for recommendation in cluster_data.characteristics.recommendations %}
+                        <li><i class="bi bi-arrow-right text-primary"></i> {{ recommendation }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#desa-{{ loop.index }}" aria-expanded="false">
+                <i class="bi bi-list"></i> Lihat Daftar Desa ({{ cluster_data.count }})
+            </button>
+        </div>
+        
+        <div class="collapse mt-3" id="desa-{{ loop.index }}">
+            <div class="card card-body bg-light">
+                <div class="row">
+                    {% for desa in cluster_data.desa_list %}
+                        <div class="col-md-6 col-lg-4 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small>
+                                    <strong>{{ desa.nama }}</strong><br>
+                                    <span class="text-muted">{{ desa.kecamatan }}</span>
+                                </small>
+                                <span class="badge bg-secondary">{{ "%.2f"|format(desa.probabilitas) }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-clipboard-check"></i> Implementasi Hasil Analisis
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="bi bi-people"></i> Untuk Dinas Pertanian</h6>
+                <ul>
+                    <li><strong>Alokasi Anggaran:</strong> Prioritaskan cluster produksi rendah untuk program bantuan</li>
+                    <li><strong>Program Pelatihan:</strong> Sesuaikan materi dengan karakteristik setiap cluster</li>
+                    <li><strong>Distribusi Pupuk:</strong> Tentukan jenis dan jumlah berdasarkan kebutuhan cluster</li>
+                    <li><strong>Infrastruktur:</strong> Fokus pembangunan infrastruktur di daerah potensial</li>
+                </ul>
+            </div>
+            
+            <div class="col-md-6">
+                <h6><i class="bi bi-graph-up"></i> Strategi Pengembangan</h6>
+                <ul>
+                    <li><strong>Jangka Pendek:</strong> Intervensi cepat untuk cluster produksi rendah</li>
+                    <li><strong>Jangka Menengah:</strong> Optimalisasi cluster produksi menengah</li>
+                    <li><strong>Jangka Panjang:</strong> Replikasi best practices dari cluster produksi tinggi</li>
+                    <li><strong>Monitoring:</strong> Evaluasi berkala kemajuan setiap cluster</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <h6><i class="bi bi-info-circle"></i> Catatan Penting</h6>
+            <p class="mb-0">
+                Dashboard ini menyediakan insight berbasis data untuk pengambilan keputusan strategis. 
+                Rekomendasi yang diberikan berdasarkan analisis clustering menggunakan algoritma Gaussian Mixture Model (GMM) 
+                dan dapat menjadi acuan dalam perencanaan program pembangunan perkebunan kakao yang lebih efektif dan tepat sasaran.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

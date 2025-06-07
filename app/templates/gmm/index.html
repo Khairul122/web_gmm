@@ -1,0 +1,214 @@
+{% extends "layout.html" %}
+
+{% block title %}Data GMM Clustering{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-primary">Data GMM Clustering</h1>
+    <div>
+        <a href="{{ url_for('gmm.dashboard') }}" class="btn btn-primary me-2">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a href="{{ url_for('gmm.evaluasi_model') }}" class="btn btn-info me-2">
+            <i class="bi bi-graph-up"></i> Evaluasi
+        </a>
+        <a href="{{ url_for('gmm.statistik') }}" class="btn btn-warning me-2">
+            <i class="bi bi-bar-chart"></i> Statistik
+        </a>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-gear"></i> Proses GMM
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('gmm.proses_gmm') }}">Auto (Berdasarkan Cluster)</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('gmm.proses_gmm', n_clusters=2) }}">2 Cluster</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('gmm.proses_gmm', n_clusters=3) }}">3 Cluster</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('gmm.proses_gmm', n_clusters=4) }}">4 Cluster</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('gmm.proses_gmm', n_clusters=5) }}">5 Cluster</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1">Total Clustering</h5>
+                        <h2 class="mb-1">{{ stats.total_clustering if stats else 0 }}</h2>
+                        <small>Data yang diproses</small>
+                    </div>
+                    <i class="bi bi-collection display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1">Konvergensi</h5>
+                        <h2 class="mb-1">{{ stats.converged_count if stats else 0 }}</h2>
+                        <small>Model yang konvergen</small>
+                    </div>
+                    <i class="bi bi-check-circle display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1">Total Iterasi</h5>
+                        <h2 class="mb-1">{{ stats.total_iterations if stats else 0 }}</h2>
+                        <small>Iterasi maksimal</small>
+                    </div>
+                    <i class="bi bi-arrow-repeat display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1">Jumlah Cluster</h5>
+                        <h2 class="mb-1">{{ stats.clusters_count if stats else 0 }}</h2>
+                        <small>Cluster terbentuk</small>
+                    </div>
+                    <i class="bi bi-diagram-3 display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Hasil GMM Clustering</h5>
+        {% if data %}
+            <a href="{{ url_for('gmm.hapus_semua') }}" 
+               class="btn btn-outline-danger btn-sm"
+               onclick="return confirm('Apakah Anda yakin ingin menghapus semua data GMM?')">
+                <i class="bi bi-trash"></i> Hapus Semua
+            </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if data %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>No</th>
+                            <th>Desa</th>
+                            <th>Kecamatan</th>
+                            <th>Cluster</th>
+                            <th>Probabilitas</th>
+                            <th>Iterasi</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in data %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.desa.nama_desa }}</td>
+                                <td>{{ item.desa.kecamatan.nama_kecamatan }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if 'Produksi Rendah' in item.cluster.nama_cluster %}
+                                            bg-danger
+                                        {% elif 'Produksi Menengah' in item.cluster.nama_cluster %}
+                                            bg-warning
+                                        {% elif 'Produksi Tinggi' in item.cluster.nama_cluster %}
+                                            bg-success
+                                        {% else %}
+                                            bg-secondary
+                                        {% endif %}
+                                    ">
+                                        {{ item.cluster.nama_cluster }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar 
+                                            {% if item.probabilitas >= 0.8 %}
+                                                bg-success
+                                            {% elif item.probabilitas >= 0.6 %}
+                                                bg-warning
+                                            {% else %}
+                                                bg-danger
+                                            {% endif %}
+                                        " role="progressbar" 
+                                        style="width: {{ (item.probabilitas * 100) if item.probabilitas else 0 }}%">
+                                            {{ "%.2f"|format(item.probabilitas) if item.probabilitas else "0.00" }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ item.iteration }}</span>
+                                </td>
+                                <td>
+                                    {% if item.converged %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Konvergen
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-circle"></i> Belum Konvergen
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('gmm.detail', id=item.id_clustering) }}" 
+                                       class="btn btn-outline-info btn-sm me-1" 
+                                       title="Detail">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('gmm.hapus', id=item.id_clustering) }}" 
+                                       class="btn btn-outline-danger btn-sm" 
+                                       title="Hapus"
+                                       onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-gear display-1 text-muted mb-3"></i>
+                <h5 class="text-muted">Belum ada data GMM</h5>
+                <p class="text-muted mb-4">Mulai proses GMM untuk melakukan clustering dengan algoritma Gaussian Mixture Model.</p>
+                <div>
+                    <a href="{{ url_for('gmm.proses_gmm') }}" class="btn btn-success">
+                        <i class="bi bi-gear"></i> Mulai Proses GMM
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

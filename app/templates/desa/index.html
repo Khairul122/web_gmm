@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block title %}Daftar Desa{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-primary">Daftar Desa</h2>
+    <a href="{{ url_for('desa.form') }}" class="btn btn-success">+ Tambah Desa</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>No</th>
+        <th>Nama Desa</th>
+        <th>Kecamatan</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in data %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ d.nama_desa }}</td>
+        <td>{{ d.kecamatan.nama_kecamatan }}</td>
+        <td>
+          <a href="{{ url_for('desa.form', id_desa=d.id_desa) }}" class="btn btn-warning btn-sm">Edit</a>
+          <a href="{{ url_for('desa.hapus', id_desa=d.id_desa) }}" class="btn btn-danger btn-sm" onclick="return confirm('Hapus data ini?')">Hapus</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="text-center">Belum ada data.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends "layout.html" %}
+
+{% block title %}Detail GMM Clustering{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-primary">Detail GMM Clustering</h1>
+    <div>
+        <a href="{{ url_for('gmm.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Informasi Umum
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>ID Clustering:</strong></td>
+                        <td>{{ data.gmm.id_clustering }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Desa:</strong></td>
+                        <td>{{ data.gmm.desa.nama_desa }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kecamatan:</strong></td>
+                        <td>{{ data.gmm.desa.kecamatan.nama_kecamatan }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cluster:</strong></td>
+                        <td>
+                            <span class="badge 
+                                {% if 'Produksi Rendah' in data.gmm.cluster.nama_cluster %}
+                                    bg-danger
+                                {% elif 'Produksi Menengah' in data.gmm.cluster.nama_cluster %}
+                                    bg-warning
+                                {% elif 'Produksi Tinggi' in data.gmm.cluster.nama_cluster %}
+                                    bg-success
+                                {% else %}
+                                    bg-secondary
+                                {% endif %}
+                            ">
+                                {{ data.gmm.cluster.nama_cluster }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Probabilitas:</strong></td>
+                        <td>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar 
+                                    {% if data.gmm.probabilitas >= 0.8 %}
+                                        bg-success
+                                    {% elif data.gmm.probabilitas >= 0.6 %}
+                                        bg-warning
+                                    {% else %}
+                                        bg-danger
+                                    {% endif %}
+                                " role="progressbar" 
+                                style="width: {{ (data.gmm.probabilitas * 100) if data.gmm.probabilitas else 0 }}%">
+                                    {{ "%.4f"|format(data.gmm.probabilitas) if data.gmm.probabilitas else "0.0000" }}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Iterasi:</strong></td>
+                        <td><span class="badge bg-secondary">{{ data.gmm.iteration }}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status Konvergensi:</strong></td>
+                        <td>
+                            {% if data.gmm.converged %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Konvergen
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-exclamation-circle"></i> Belum Konvergen
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calculator"></i> Mean Vector (μ)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if data.mean_vector %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Mean Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(data.mean_vector|length) %}
+                                    <tr>
+                                        <td><strong>{{ data.feature_names[i] if i < data.feature_names|length else 'Feature ' + (i+1)|string }}</strong></td>
+                                        <td>
+                                            <code>{{ "%.6f"|format(data.mean_vector[i]) }}</code>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Mean vector tidak tersedia</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-grid"></i> Covariance Matrix (Σ)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if data.covariance_matrix %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered text-center">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th></th>
+                                    {% for i in range(data.covariance_matrix[0]|length) %}
+                                        <th>{{ data.feature_names[i] if i < data.feature_names|length else 'F' + (i+1)|string }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in range(data.covariance_matrix|length) %}
+                                    <tr>
+                                        <th class="table-dark">{{ data.feature_names[i] if i < data.feature_names|length else 'F' + (i+1)|string }}</th>
+                                        {% for j in range(data.covariance_matrix[i]|length) %}
+                                            <td>
+                                                <code style="font-size: 0.8em;">{{ "%.4f"|format(data.covariance_matrix[i][j]) }}</code>
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6><i class="bi bi-info-circle"></i> Interpretasi Covariance Matrix:</h6>
+                        <ul class="small text-muted">
+                            <li><strong>Diagonal elements:</strong> Variance untuk setiap feature</li>
+                            <li><strong>Off-diagonal elements:</strong> Covariance antar feature</li>
+                            <li><strong>Nilai positif:</strong> Korelasi positif antar feature</li>
+                            <li><strong>Nilai negatif:</strong> Korelasi negatif antar feature</li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Covariance matrix tidak tersedia</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-journal-text"></i> Deskripsi Cluster
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>{{ data.gmm.cluster.deskripsi }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

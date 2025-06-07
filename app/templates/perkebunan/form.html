@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ 'Edit' if edit else 'Tambah' }} Data Perkebunan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-primary mb-4">{{ 'Edit' if edit else 'Tambah' }} Data Perkebunan</h2>
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="row">
+      <div class="mb-3 col-md-6">
+        {{ form.id_kecamatan.label(class="form-label") }}
+        {{ form.id_kecamatan(class="form-select", id="id_kecamatan") }}
+      </div>
+      <div class="mb-3 col-md-6">
+        {{ form.id_desa.label(class="form-label") }}
+        {{ form.id_desa(class="form-select", id="id_desa") }}
+      </div>
+
+      <div class="mb-3 col-md-4">
+        {{ form.luas_tbm.label(class="form-label") }}
+        {{ form.luas_tbm(class="form-control") }}
+      </div>
+      <div class="mb-3 col-md-4">
+        {{ form.luas_tm.label(class="form-label") }}
+        {{ form.luas_tm(class="form-control") }}
+      </div>
+      <div class="mb-3 col-md-4">
+        {{ form.luas_ttm.label(class="form-label") }}
+        {{ form.luas_ttm(class="form-control") }}
+      </div>
+
+      <div class="mb-3 col-md-4">
+        {{ form.luas_jumlah.label(class="form-label") }}
+        {{ form.luas_jumlah(class="form-control") }}
+      </div>
+      <div class="mb-3 col-md-4">
+        {{ form.produksi_ton.label(class="form-label") }}
+        {{ form.produksi_ton(class="form-control") }}
+      </div>
+      <div class="mb-3 col-md-4">
+        {{ form.produktivitas_kg_ha.label(class="form-label") }}
+        {{ form.produktivitas_kg_ha(class="form-control") }}
+      </div>
+
+      <div class="mb-3 col-md-6">
+        {{ form.jumlah_petani_kk.label(class="form-label") }}
+        {{ form.jumlah_petani_kk(class="form-control") }}
+      </div>
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
+    <a href="{{ url_for('perkebunan.index') }}" class="btn btn-secondary">Kembali</a>
+  </form>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const kecamatanSelect = document.querySelector("#id_kecamatan");
+    const desaSelect = document.querySelector("#id_desa");
+
+    function fetchDesa(kecamatanId, selectedDesaId = null) {
+      fetch(`/perkebunan/desa/${kecamatanId}`)
+        .then(response => response.json())
+        .then(data => {
+          desaSelect.innerHTML = '';
+          data.desa.forEach(d => {
+            const option = document.createElement("option");
+            option.value = d.id;
+            option.text = d.nama;
+            if (selectedDesaId && d.id == selectedDesaId) {
+              option.selected = true;
+            }
+            desaSelect.appendChild(option);
+          });
+        });
+    }
+
+    if (kecamatanSelect) {
+      kecamatanSelect.addEventListener("change", function () {
+        fetchDesa(this.value);
+      });
+
+      {% if form.id_kecamatan.data and form.id_desa.data %}
+        fetchDesa({{ form.id_kecamatan.data }}, {{ form.id_desa.data }});
+      {% endif %}
+    }
+  });
+</script>
+{% endblock %}

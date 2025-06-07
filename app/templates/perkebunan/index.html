@@ -1,0 +1,189 @@
+{% extends "layout.html" %}
+{% block title %}Data Perkebunan{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-primary">Data Perkebunan</h2>
+    <a href="{{ url_for('perkebunan.form') }}" class="btn btn-success">+ Tambah Data</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <form method="GET" class="d-flex">
+        <input type="text" name="search" class="form-control me-2" placeholder="Cari berdasarkan kecamatan atau desa..." value="{{ request.args.get('search', '') }}">
+        <button type="submit" class="btn btn-primary">Cari</button>
+        {% if request.args.get('search') %}
+        <a href="{{ url_for('perkebunan.index') }}" class="btn btn-secondary ms-2">Reset</a>
+        {% endif %}
+      </form>
+    </div>
+    <div class="col-md-6 text-end">
+      <small class="text-muted">
+        Menampilkan {{ pagination.per_page * (pagination.page - 1) + 1 }} - 
+        {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} 
+        dari {{ pagination.total }} data
+      </small>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped" id="perkebunanTable">
+      <thead class="table-dark">
+        <tr>
+          <th style="width: 60px;">No</th>
+          <th style="width: 120px;">Kecamatan</th>
+          <th style="width: 150px;">Desa</th>
+          <th style="width: 100px;">Luas TBM (Ha)</th>
+          <th style="width: 100px;">Luas TM (Ha)</th>
+          <th style="width: 100px;">Luas TTM (Ha)</th>
+          <th style="width: 120px;">Luas Total (Ha)</th>
+          <th style="width: 100px;">Produksi (Ton)</th>
+          <th style="width: 120px;">Produktivitas (Kg/Ha)</th>
+          <th style="width: 80px;">Petani (KK)</th>
+          <th style="width: 120px;">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pagination.items %}
+        <tr>
+          <td>{{ ((pagination.page - 1) * pagination.per_page) + loop.index }}</td>
+          <td>{{ p.kecamatan.nama_kecamatan if p.kecamatan else 'N/A' }}</td>
+          <td>{{ p.desa.nama_desa if p.desa else 'N/A' }}</td>
+          <td class="text-end">{{ "%.2f"|format(p.luas_tbm) }}</td>
+          <td class="text-end">{{ "%.2f"|format(p.luas_tm) }}</td>
+          <td class="text-end">{{ "%.2f"|format(p.luas_ttm) }}</td>
+          <td class="text-end">{{ "%.2f"|format(p.luas_jumlah) }}</td>
+          <td class="text-end">{{ "%.2f"|format(p.produksi_ton) }}</td>
+          <td class="text-end">{{ "{:,.0f}".format(p.produktivitas_kg_ha) }}</td>
+          <td class="text-center">{{ p.jumlah_petani_kk }}</td>
+          <td class="text-center">
+            <a href="{{ url_for('perkebunan.form', id_perkebunan=p.id_perkebunan) }}" class="btn btn-warning btn-sm me-1">Edit</a>
+            <a href="{{ url_for('perkebunan.hapus', id_perkebunan=p.id_perkebunan) }}" 
+               class="btn btn-danger btn-sm" 
+               onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')">Hapus</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="11" class="text-center py-4">
+            <span class="text-muted">Belum ada data perkebunan.</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <nav aria-label="Navigasi halaman">
+    <ul class="pagination justify-content-center">
+      {% if pagination.has_prev %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('perkebunan.index', page=pagination.prev_num, search=request.args.get('search')) }}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">&laquo;</span>
+      </li>
+      {% endif %}
+
+      {% for page_num in pagination.iter_pages() %}
+      {% if page_num %}
+      {% if page_num != pagination.page %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('perkebunan.index', page=page_num, search=request.args.get('search')) }}">{{ page_num }}</a>
+      </li>
+      {% else %}
+      <li class="page-item active" aria-current="page">
+        <span class="page-link">{{ page_num }}</span>
+      </li>
+      {% endif %}
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">...</span>
+      </li>
+      {% endif %}
+      {% endfor %}
+
+      {% if pagination.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="{{ url_for('perkebunan.index', page=pagination.next_num, search=request.args.get('search')) }}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">&raquo;</span>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <div class="row mt-3">
+    <div class="col-md-12 text-center">
+      <small class="text-muted">
+        Halaman {{ pagination.page }} dari {{ pagination.pages }} | 
+        Total {{ pagination.total }} data
+      </small>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.table th {
+  white-space: nowrap;
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.table td {
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.btn-sm {
+  font-size: 12px;
+  padding: 0.25rem 0.5rem;
+}
+
+.pagination .page-link {
+  color: #0d6efd;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 12px;
+  }
+  
+  .btn-sm {
+    font-size: 11px;
+    padding: 0.2rem 0.3rem;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Perkebunan page loaded');
+    console.log('Total data:', {{ pagination.total }});
+    console.log('Current page:', {{ pagination.page }});
+    console.log('Per page:', {{ pagination.per_page }});
+});
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+<nav class="sidebar sidebar-offcanvas" id="sidebar">
+  <ul class="nav">
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+        <i class="mdi mdi-grid-large menu-icon"></i>
+        <span class="menu-title">Dashboard</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('kecamatan.index') }}">
+        <i class="mdi mdi-grid-large menu-icon"></i>
+        <span class="menu-title">Data Kecamatan</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('desa.index') }}">
+        <i class="mdi mdi-grid-large menu-icon"></i>
+        <span class="menu-title">Data Desa</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('perkebunan.index') }}">
+        <i class="mdi mdi-grid-large menu-icon"></i>
+        <span class="menu-title">Data Perkebunan</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('cluster.index') }}">
+        <i class="mdi mdi-grid-large menu-icon"></i>
+        <span class="menu-title">Cluster</span>
+      </a>
+    </li>
+     <li class="nav-item">
+      <a class="nav-link" href="{{ url_for('gmm.index') }}">
+        <i class="mdi mdi-grid-large menu-icon"></i>
+        <span class="menu-title">Hasil GMM</span>
+      </a>
+    </li>
+  </ul>
+</nav>

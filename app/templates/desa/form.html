@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ 'Edit' if edit else 'Tambah' }} Desa{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-primary mb-4">{{ 'Edit' if edit else 'Tambah' }} Desa</h2>
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.id_kecamatan.label(class="form-label") }}
+      {{ form.id_kecamatan(class="form-select") }}
+      {% if form.id_kecamatan.errors %}
+        <div class="text-danger">{{ form.id_kecamatan.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.nama_desa.label(class="form-label") }}
+      {{ form.nama_desa(class="form-control", placeholder="Masukkan nama desa") }}
+      {% if form.nama_desa.errors %}
+        <div class="text-danger">{{ form.nama_desa.errors[0] }}</div>
+      {% endif %}
+    </div>
+
+    {{ form.submit(class="btn btn-primary") }}
+    <a href="{{ url_for('desa.index') }}" class="btn btn-secondary">Kembali</a>
+  </form>
+</div>
+{% endblock %}

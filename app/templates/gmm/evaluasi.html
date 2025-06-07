@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+
+{% block title %}Evaluasi Model GMM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-primary">Evaluasi Model GMM</h1>
+    <div>
+        <a href="{{ url_for('gmm.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Kembali
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+        {% set overall_quality = 'baik' if (data.silhouette_score > 0.5 and data.davies_bouldin_index < 1) else 'cukup' if (data.silhouette_score > 0.3 or data.davies_bouldin_index < 2) else 'kurang' %}
+        
+        {% if overall_quality == 'baik' %}
+            <div class="alert alert-success">
+                <h6><i class="bi bi-check-circle"></i> Model Clustering Berkualitas Baik</h6>
+                <p>
+                    Hasil evaluasi menunjukkan bahwa model GMM telah berhasil mengelompokkan data perkebunan kakao 
+                    dengan baik. Cluster-cluster yang terbentuk memiliki karakteristik yang jelas dan terpisah.
+                </p>
+                <strong>Rekomendasi:</strong>
+                <ul>
+                    <li>Model dapat digunakan untuk analisis dan pengambilan keputusan</li>
+                    <li>Lanjutkan ke tahap implementasi strategi berbasis cluster</li>
+                    <li>Gunakan hasil clustering untuk alokasi sumber daya</li>
+                </ul>
+            </div>
+        {% elif overall_quality == 'cukup' %}
+            <div class="alert alert-warning">
+                <h6><i class="bi bi-exclamation-triangle"></i> Model Clustering Berkualitas Cukup</h6>
+                <p>
+                    Hasil evaluasi menunjukkan bahwa model GMM cukup baik dalam mengelompokkan data, 
+                    namun masih ada ruang untuk perbaikan.
+                </p>
+                <strong>Rekomendasi:</strong>
+                <ul>
+                    <li>Pertimbangkan untuk menyesuaikan jumlah cluster</li>
+                    <li>Lakukan preprocessing data tambahan</li>
+                    <li>Evaluasi pemilihan fitur yang digunakan</li>
+                    <li>Model masih dapat digunakan dengan catatan khusus</li>
+                </ul>
+            </div>
+        {% else %}
+            <div class="alert alert-danger">
+                <h6><i class="bi bi-x-circle"></i> Model Clustering Perlu Perbaikan</h6>
+                <p>
+                    Hasil evaluasi menunjukkan bahwa kualitas clustering masih kurang optimal. 
+                    Diperlukan perbaikan sebelum implementasi.
+                </p>
+                <strong>Rekomendasi:</strong>
+                <ul>
+                    <li>Coba dengan jumlah cluster yang berbeda</li>
+                    <li>Lakukan analisis ulang pemilihan fitur</li>
+                    <li>Pertimbangkan metode clustering alternatif</li>
+                    <li>Periksa kualitas dan kelengkapan data input</li>
+                </ul>
+            </div>
+        {% endif %}
+        
+        <div class="mt-3">
+            <h6>Langkah Selanjutnya:</h6>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('gmm.dashboard') }}" class="btn btn-primary">
+                    <i class="bi bi-speedometer2"></i> Lihat Dashboard
+                </a>
+                <a href="{{ url_for('gmm.proses_gmm', n_clusters=2) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-gear"></i> Coba 2 Cluster
+                </a>
+                <a href="{{ url_for('gmm.proses_gmm', n_clusters=4) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-gear"></i> Coba 4 Cluster
+                </a>
+                <a href="{{ url_for('gmm.proses_gmm', n_clusters=5) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-gear"></i> Coba 5 Cluster
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i> Silhouette Score
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <h2 class="display-4 
+                    {% if data.silhouette_score > 0.5 %}
+                        text-success
+                    {% elif data.silhouette_score > 0.3 %}
+                        text-warning
+                    {% else %}
+                        text-danger
+                    {% endif %}
+                ">
+                    {{ "%.4f"|format(data.silhouette_score) }}
+                </h2>
+                <p class="lead">
+                    <span class="badge 
+                        {% if data.silhouette_score > 0.5 %}
+                            bg-success
+                        {% elif data.silhouette_score > 0.3 %}
+                            bg-warning
+                        {% else %}
+                            bg-danger
+                        {% endif %}
+                    ">
+                        {{ data.interpretation.silhouette }}
+                    </span>
+                </p>
+                <small class="text-muted">
+                    Rentang: -1 (buruk) hingga 1 (sangat baik)<br>
+                    > 0.5: Baik | 0.3-0.5: Cukup | < 0.3: Kurang
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-down"></i> Davies-Bouldin Index
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <h2 class="display-4 
+                    {% if data.davies_bouldin_index < 1 %}
+                        text-success
+                    {% elif data.davies_bouldin_index < 2 %}
+                        text-warning
+                    {% else %}
+                        text-danger
+                    {% endif %}
+                ">
+                    {{ "%.4f"|format(data.davies_bouldin_index) }}
+                </h2>
+                <p class="lead">
+                    <span class="badge 
+                        {% if data.davies_bouldin_index < 1 %}
+                            bg-success
+                        {% elif data.davies_bouldin_index < 2 %}
+                            bg-warning
+                        {% else %}
+                            bg-danger
+                        {% endif %}
+                    ">
+                        {{ data.interpretation.davies_bouldin }}
+                    </span>
+                </p>
+                <small class="text-muted">
+                    Rentang: 0 (sangat baik) hingga ∞ (buruk)<br>
+                    < 1: Baik | 1-2: Cukup | > 2: Kurang
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-bar-chart"></i> Visualisasi Evaluasi Model
+        </h5>
+    </div>
+    <div class="card-body text-center">
+        <img src="data:image/png;base64,{{ data.plot_url }}" 
+             class="img-fluid" 
+             alt="Visualisasi Evaluasi GMM"
+             style="max-width: 100%; height: auto;">
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Interpretasi Silhouette Score
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Apa itu Silhouette Score?</h6>
+                <p class="small">
+                    Silhouette Score mengukur seberapa mirip suatu objek dengan cluster-nya sendiri 
+                    dibandingkan dengan cluster lain. Skor yang lebih tinggi menunjukkan clustering yang lebih baik.
+                </p>
+                
+                <h6>Interpretasi Hasil:</h6>
+                <ul class="small">
+                    {% if data.silhouette_score > 0.5 %}
+                        <li class="text-success">
+                            <strong>Clustering Baik:</strong> Data dalam satu cluster sangat mirip dan 
+                            berbeda signifikan dari cluster lain.
+                        </li>
+                    {% elif data.silhouette_score > 0.3 %}
+                        <li class="text-warning">
+                            <strong>Clustering Cukup:</strong> Data cukup terpisah antar cluster, 
+                            namun masih ada overlap.
+                        </li>
+                    {% else %}
+                        <li class="text-danger">
+                            <strong>Clustering Kurang:</strong> Banyak data yang tidak jelas 
+                            keanggotaan clusternya.
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle"></i> Interpretasi Davies-Bouldin Index
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Apa itu Davies-Bouldin Index?</h6>
+                <p class="small">
+                    Davies-Bouldin Index mengukur rata-rata similaritas antara setiap cluster 
+                    dengan cluster yang paling mirip dengannya. Skor yang lebih rendah menunjukkan clustering yang lebih baik.
+                </p>
+                
+                <h6>Interpretasi Hasil:</h6>
+                <ul class="small">
+                    {% if data.davies_bouldin_index < 1 %}
+                        <li class="text-success">
+                            <strong>Clustering Baik:</strong> Cluster-cluster terpisah dengan jelas 
+                            dan memiliki struktur internal yang kompak.
+                        </li>
+                    {% elif data.davies_bouldin_index < 2 %}
+                        <li class="text-warning">
+                            <strong>Clustering Cukup:</strong> Ada beberapa cluster yang masih 
+                            memiliki kemiripan, namun masih dapat diterima.
+                        </li>
+                    {% else %}
+                        <li class="text-danger">
+                            <strong>Clustering Kurang:</strong> Cluster-cluster terlalu mirip 
+                            satu sama lain atau struktur internal tidak kompak.
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-lightbulb"></i> Rekomendasi Berdasarkan Evaluasi
+        </h5>
+    </div>
+    <div class="card-
