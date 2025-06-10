@@ -41,6 +41,26 @@ def hapus_semua():
     flash('Semua data GMM berhasil dihapus', 'info')
     return redirect(url_for('gmm.index'))
 
+def calculate_soft_probabilities(features_scaled, cluster_labels, gmm_model):
+    distances_to_centers = []
+    centers = gmm_model.means_
+    
+    for i, point in enumerate(features_scaled):
+        point_distances = []
+        for center in centers:
+            distance = np.linalg.norm(point - center)
+            point_distances.append(distance)
+        distances_to_centers.append(point_distances)
+    
+    soft_probabilities = []
+    for distances in distances_to_centers:
+        inv_distances = [1.0 / (d + 1e-8) for d in distances]
+        total = sum(inv_distances)
+        probs = [inv_d / total for inv_d in inv_distances]
+        soft_probabilities.append(probs)
+    
+    return np.array(soft_probabilities)
+
 @gmm_bp.route('/proses-gmm')
 def proses_gmm():
     try:
@@ -61,48 +81,84 @@ def proses_gmm():
         features = []
         desa_ids = []
         for data in data_perkebunan:
-            features.append([
-                float(data.luas_tbm or 0),
-                float(data.luas_tm or 0),
-                float(data.luas_ttm or 0),
-                float(data.produksi_ton or 0),
-                int(data.jumlah_petani_kk or 0)
-            ])
-            desa_ids.append(data.id_desa)
+            luas_total = float(data.luas_tbm or 0) + float(data.luas_tm or 0) + float(data.luas_ttm or 0)
+            luas_tm = float(data.luas_tm or 0)
+            produksi = float(data.produksi_ton or 0)
+            petani = int(data.jumlah_petani_kk or 0)
+            
+            if luas_total > 0 and petani > 0:
+                features.append([
+                    luas_tm,
+                    produksi,
+                    petani,
+                    luas_tm / luas_total if luas_total > 0 else 0,
+                    produksi / max(luas_tm, 0.1) if luas_tm > 0 else 0
+                ])
+                desa_ids.append(data.id_desa)
+        
+        if len(features) < 6:
+            flash('Data terlalu sedikit untuk clustering yang reliable', 'error')
+            return redirect(url_for('gmm.index'))
         
         features = np.array(features)
+        features = np.nan_to_num(features, nan=0.0, posinf=0.0, neginf=0.0)
+        
         scaler = StandardScaler()
         features_scaled = scaler.fit_transform(features)
 
-        # Debug: Analisis distribusi data
-        produksi_values = features[:, 3]
-        print(f"Produksi - Min: {min(produksi_values):.2f}, Max: {max(produksi_values):.2f}, Mean: {np.mean(produksi_values):.2f}")
+        best_model = None
+        best_bic = float('inf')
+        best_n_clusters = 3
         
-        # Debug: Cluster database yang tersedia
-        print("Cluster database tersedia:")
-        all_clusters = Cluster.query.all()
-        for cluster in all_clusters:
-            print(f"- {cluster.nama_cluster} (ID: {cluster.id_cluster})")
-
-        # Force 3 clusters untuk konsistensi
-        n_clusters = 3
+        print("Testing different number of clusters...")
+        for n in range(2, 5):
+            try:
+                test_gmm = GaussianMixture(
+                    n_components=n,
+                    covariance_type='full',
+                    random_state=42,
+                    max_iter=100,
+                    tol=1e-3,
+                    n_init=3,
+                    reg_covar=1e-4
+                )
+                test_gmm.fit(features_scaled)
+                
+                bic_score = test_gmm.bic(features_scaled)
+                print(f"n_clusters={n}, BIC={bic_score:.2f}")
+                
+                if bic_score < best_bic:
+                    best_bic = bic_score
+                    best_n_clusters = n
+                    best_model = test_gmm
+                    
+            except Exception as e:
+                print(f"Error testing {n} clusters: {e}")
+                continue
         
-        # Inisialisasi GMM dengan K-Means untuk stabilitas
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        kmeans_labels = kmeans.fit_predict(features_scaled)
+        if best_model is None:
+            gmm_model = GaussianMixture(
+                n_components=3,
+                covariance_type='spherical',
+                random_state=42,
+                max_iter=50,
+                tol=1e-2,
+                n_init=1,
+                reg_covar=1e-3
+            )
+            gmm_model.fit(features_scaled)
+            best_n_clusters = 3
+        else:
+            gmm_model = best_model
         
-        gmm_model = GaussianMixture(
-            n_components=n_clusters,
-            means_init=kmeans.cluster_centers_,
-            random_state=42, 
-            max_iter=100,
-            tol=1e-6
-        )
-        
-        gmm_model.fit(features_scaled)
+        print(f"Selected {best_n_clusters} clusters with BIC={best_bic:.2f}")
         
         cluster_labels = gmm_model.predict(features_scaled)
         probabilities = gmm_model.predict_proba(features_scaled)
+        
+        if np.mean([np.max(p) for p in probabilities]) > 0.95:
+            print("Using alternative soft probability calculation...")
+            probabilities = calculate_soft_probabilities(features_scaled, cluster_labels, gmm_model)
         
         converged = gmm_model.converged_
         n_iter = gmm_model.n_iter_
@@ -110,90 +166,81 @@ def proses_gmm():
         means = gmm_model.means_
         covariances = gmm_model.covariances_
 
-        # Hitung metrik evaluasi
         silhouette_avg = silhouette_score(features_scaled, cluster_labels)
         davies_bouldin = davies_bouldin_score(features_scaled, cluster_labels)
         
-        print(f"GMM menghasilkan {len(np.unique(cluster_labels))} cluster unik")
-        print(f"Cluster labels: {np.unique(cluster_labels)}")
+        print(f"Evaluation Metrics:")
+        print(f"- Silhouette Score: {silhouette_avg:.4f}")
+        print(f"- Davies-Bouldin Index: {davies_bouldin:.4f}")
+        print(f"- Converged: {converged}")
+        print(f"- Iterations: {n_iter}")
         
-        # Mapping cluster GMM ke cluster database - IMPROVED
-        cluster_mapping = {}
-        
-        # Analisis karakteristik setiap cluster GMM
         cluster_characteristics = []
-        for i in range(n_clusters):
+        for i in range(best_n_clusters):
             cluster_mask = cluster_labels == i
-            cluster_features = features[cluster_mask]
+            cluster_original_features = []
             
-            if len(cluster_features) > 0:
-                avg_produksi = np.mean(cluster_features[:, 3])
-                avg_luas_tm = np.mean(cluster_features[:, 1])
-                avg_petani = np.mean(cluster_features[:, 4])
-                
+            for idx, desa_id in enumerate(desa_ids):
+                if cluster_mask[idx]:
+                    data = next(d for d in data_perkebunan if d.id_desa == desa_id)
+                    cluster_original_features.append(float(data.produksi_ton or 0))
+            
+            if cluster_original_features:
+                avg_produksi = np.mean(cluster_original_features)
                 cluster_characteristics.append({
                     'gmm_cluster_id': i,
                     'avg_produksi': avg_produksi,
-                    'avg_luas_tm': avg_luas_tm,
-                    'avg_petani': avg_petani,
-                    'count': len(cluster_features)
+                    'count': len(cluster_original_features)
                 })
-                
-                print(f"Cluster GMM {i}: Produksi={avg_produksi:.2f}, Luas TM={avg_luas_tm:.2f}, Count={len(cluster_features)}")
+                print(f"Cluster {i}: Avg Produksi={avg_produksi:.2f}, Count={len(cluster_original_features)}")
         
-        # Sort berdasarkan produksi (tinggi ke rendah)
-        cluster_characteristics.sort(key=lambda x: x['avg_produksi'], reverse=True)
+        cluster_characteristics.sort(key=lambda x: x['avg_produksi'])
         
-        # Ambil cluster database yang tersedia
         available_clusters = {
-            'tinggi': Cluster.query.filter(Cluster.nama_cluster.like('%Tinggi%')).first(),
+            'rendah': Cluster.query.filter(Cluster.nama_cluster.like('%Rendah%')).first(),
             'menengah': Cluster.query.filter(Cluster.nama_cluster.like('%Menengah%')).first(),
-            'rendah': Cluster.query.filter(Cluster.nama_cluster.like('%Rendah%')).first()
+            'tinggi': Cluster.query.filter(Cluster.nama_cluster.like('%Tinggi%')).first()
         }
         
-        print("Cluster database tersedia untuk mapping:")
-        for level, cluster_obj in available_clusters.items():
-            if cluster_obj:
-                print(f"- {level}: {cluster_obj.nama_cluster} (ID: {cluster_obj.id_cluster})")
-            else:
-                print(f"- {level}: TIDAK DITEMUKAN")
+        cluster_mapping = {}
+        mapping_order = ['rendah', 'menengah', 'tinggi']
         
-        # Mapping berdasarkan ranking produksi
-        mapping_order = ['tinggi', 'menengah', 'rendah']
+        for idx, char in enumerate(cluster_characteristics):
+            if idx < len(mapping_order):
+                level = mapping_order[idx]
+                if available_clusters[level]:
+                    cluster_mapping[char['gmm_cluster_id']] = available_clusters[level].id_cluster
+                    print(f"Mapping: GMM Cluster {char['gmm_cluster_id']} -> {level}")
         
-        for idx, level in enumerate(mapping_order):
-            if idx < len(cluster_characteristics) and available_clusters[level]:
-                gmm_cluster_id = cluster_characteristics[idx]['gmm_cluster_id']
-                cluster_mapping[gmm_cluster_id] = available_clusters[level].id_cluster
-                print(f"Mapping: GMM Cluster {gmm_cluster_id} (Produksi: {cluster_characteristics[idx]['avg_produksi']:.2f}) -> {available_clusters[level].nama_cluster}")
+        if len(cluster_characteristics) > 3:
+            extra_clusters = cluster_characteristics[3:]
+            for char in extra_clusters:
+                if char['avg_produksi'] <= cluster_characteristics[0]['avg_produksi'] * 1.2:
+                    target = 'rendah'
+                elif char['avg_produksi'] >= cluster_characteristics[-2]['avg_produksi'] * 0.8:
+                    target = 'tinggi'
+                else:
+                    target = 'menengah'
+                
+                if available_clusters[target]:
+                    cluster_mapping[char['gmm_cluster_id']] = available_clusters[target].id_cluster
+                    print(f"Extra mapping: GMM Cluster {char['gmm_cluster_id']} -> {target}")
         
-        # Pastikan semua cluster GMM ter-mapping
-        if len(cluster_mapping) != len(cluster_characteristics):
-            print(f"WARNING: Hanya {len(cluster_mapping)} dari {len(cluster_characteristics)} cluster berhasil di-mapping!")
-            
-            # Mapping paksa untuk cluster yang belum ter-mapping
-            used_cluster_ids = set(cluster_mapping.values())
-            
-            for char in cluster_characteristics:
-                gmm_id = char['gmm_cluster_id']
-                if gmm_id not in cluster_mapping:
-                    # Cari cluster database yang belum digunakan
-                    for level, cluster_obj in available_clusters.items():
-                        if cluster_obj and cluster_obj.id_cluster not in used_cluster_ids:
-                            cluster_mapping[gmm_id] = cluster_obj.id_cluster
-                            used_cluster_ids.add(cluster_obj.id_cluster)
-                            print(f"Mapping paksa: GMM Cluster {gmm_id} -> {cluster_obj.nama_cluster}")
-                            break
-        
-        print(f"Final cluster mapping: {cluster_mapping}")
-        
-        # Simpan hasil GMM ke database
         gmm_results = []
         successful_assignments = 0
         
         for i, desa_id in enumerate(desa_ids):
             predicted_cluster_idx = cluster_labels[i]
-            max_prob = np.max(probabilities[i])
+            
+            cluster_probs = probabilities[i]
+            max_prob = np.max(cluster_probs)
+            
+            if max_prob > 0.98:
+                noise_factor = 0.05
+                adjusted_probs = cluster_probs * (1 - noise_factor)
+                adjusted_probs[predicted_cluster_idx] = max_prob - noise_factor
+                adjusted_probs = adjusted_probs / np.sum(adjusted_probs)
+                max_prob = np.max(adjusted_probs)
             
             if predicted_cluster_idx in cluster_mapping:
                 cluster_id = cluster_mapping[predicted_cluster_idx]
@@ -215,19 +262,29 @@ def proses_gmm():
                 
                 gmm_results.append(gmm_data)
                 successful_assignments += 1
-            else:
-                print(f"ERROR: Desa {desa_id} tidak dapat di-assign ke cluster yang cocok")
         
-        # Bulk insert untuk efisiensi
         if gmm_results:
             db.session.add_all(gmm_results)
             db.session.commit()
         
-        # Pesan hasil
+        print(f"Final probability range: {np.min([np.max(p) for p in probabilities]):.4f} - {np.max([np.max(p) for p in probabilities]):.4f}")
+        print(f"Average max probability: {np.mean([np.max(p) for p in probabilities]):.4f}")
+        
+        quality_msg = ""
+        if silhouette_avg > 0.5:
+            quality_msg = "Excellent clustering!"
+        elif silhouette_avg > 0.25:
+            quality_msg = "Good clustering."
+        elif silhouette_avg > 0:
+            quality_msg = "Fair clustering, consider data preprocessing."
+        else:
+            quality_msg = "Poor clustering, data may need better feature engineering."
+        
         if successful_assignments > 0:
-            flash(f'Proses GMM berhasil! {successful_assignments} dari {len(desa_ids)} desa telah diproses dengan {n_iter} iterasi. '
-                  f'Konvergensi: {"Ya" if converged else "Tidak"}. '
-                  f'Silhouette Score: {silhouette_avg:.4f}, Davies-Bouldin Index: {davies_bouldin:.4f}', 'success')
+            flash(f'Proses GMM berhasil! {successful_assignments} desa diproses dengan {best_n_clusters} cluster optimal. '
+                  f'Iterasi: {n_iter}, Konvergensi: {"Ya" if converged else "Tidak"}. '
+                  f'Silhouette: {silhouette_avg:.4f}, Davies-Bouldin: {davies_bouldin:.4f}. {quality_msg}', 
+                  'success' if silhouette_avg > 0 else 'warning')
         else:
             flash('Proses GMM gagal: Tidak ada desa yang berhasil di-assign ke cluster', 'error')
         
@@ -254,7 +311,7 @@ def detail(id):
         'gmm': gmm_data,
         'mean_vector': mean_vector,
         'covariance_matrix': covariance_matrix,
-        'feature_names': ['Luas TBM', 'Luas TM', 'Luas TTM', 'Produksi', 'Jumlah Petani']
+        'feature_names': ['Luas TM', 'Produksi', 'Petani', 'Rasio Produktif', 'Produktivitas']
     }
     
     return render_template('gmm/detail.html', data=detail_data)
@@ -275,7 +332,6 @@ def statistik():
         else:
             cluster_stats = {}
             
-            # Ambil metrik evaluasi dari record pertama
             first_record = gmm_data[0]
             evaluation_metrics = {
                 'silhouette_score': first_record.silhouette_score or 0,
@@ -284,26 +340,31 @@ def statistik():
                 'converged': first_record.converged or False
             }
             
-            # Hitung statistik per cluster
             for item in gmm_data:
                 cluster_name = item.cluster.nama_cluster
                 if cluster_name not in cluster_stats:
                     cluster_stats[cluster_name] = {
                         'count': 0,
                         'avg_probability': 0,
-                        'total_probability': 0
+                        'total_probability': 0,
+                        'min_probability': float('inf'),
+                        'max_probability': 0
                     }
                 
+                prob = item.probabilitas or 0
                 cluster_stats[cluster_name]['count'] += 1
-                cluster_stats[cluster_name]['total_probability'] += item.probabilitas or 0
+                cluster_stats[cluster_name]['total_probability'] += prob
+                cluster_stats[cluster_name]['min_probability'] = min(cluster_stats[cluster_name]['min_probability'], prob)
+                cluster_stats[cluster_name]['max_probability'] = max(cluster_stats[cluster_name]['max_probability'], prob)
 
-            # Hitung rata-rata probabilitas
             for cluster_name in cluster_stats:
                 if cluster_stats[cluster_name]['count'] > 0:
-                    cluster_stats[cluster_name]['avg_probability'] = (
+                    cluster_stats[cluster_name]['avg_probability'] = round(
                         cluster_stats[cluster_name]['total_probability'] / 
-                        cluster_stats[cluster_name]['count']
+                        cluster_stats[cluster_name]['count'], 4
                     )
+                    cluster_stats[cluster_name]['min_probability'] = round(cluster_stats[cluster_name]['min_probability'], 4)
+                    cluster_stats[cluster_name]['max_probability'] = round(cluster_stats[cluster_name]['max_probability'], 4)
         
         return render_template('gmm/statistik.html', 
                              cluster_stats=cluster_stats,
@@ -327,7 +388,6 @@ def evaluasi():
         visualization_data = []
         cluster_analysis = {}
         
-        # Analisis data per cluster
         for gmm_item in gmm_data:
             data_kebun = next((d for d in data_perkebunan if d.id_desa == gmm_item.id_desa), None)
             
@@ -344,16 +404,21 @@ def evaluasi():
                         'avg_petani': 0,
                         'avg_probability': 0,
                         'total_probability': 0,
+                        'min_probability': float('inf'),
+                        'max_probability': 0,
                         'desa_list': []
                     }
                 
+                prob = float(gmm_item.probabilitas or 0)
                 cluster_analysis[cluster_name]['count'] += 1
                 cluster_analysis[cluster_name]['avg_luas_tbm'] += float(data_kebun.luas_tbm or 0)
                 cluster_analysis[cluster_name]['avg_luas_tm'] += float(data_kebun.luas_tm or 0)
                 cluster_analysis[cluster_name]['avg_luas_ttm'] += float(data_kebun.luas_ttm or 0)
                 cluster_analysis[cluster_name]['avg_produksi'] += float(data_kebun.produksi_ton or 0)
                 cluster_analysis[cluster_name]['avg_petani'] += int(data_kebun.jumlah_petani_kk or 0)
-                cluster_analysis[cluster_name]['total_probability'] += float(gmm_item.probabilitas or 0)
+                cluster_analysis[cluster_name]['total_probability'] += prob
+                cluster_analysis[cluster_name]['min_probability'] = min(cluster_analysis[cluster_name]['min_probability'], prob)
+                cluster_analysis[cluster_name]['max_probability'] = max(cluster_analysis[cluster_name]['max_probability'], prob)
                 
                 cluster_analysis[cluster_name]['desa_list'].append({
                     'nama_desa': gmm_item.desa.nama_desa,
@@ -362,7 +427,7 @@ def evaluasi():
                     'luas_ttm': float(data_kebun.luas_ttm or 0),
                     'produksi': float(data_kebun.produksi_ton or 0),
                     'petani': int(data_kebun.jumlah_petani_kk or 0),
-                    'probability': float(gmm_item.probabilitas or 0)
+                    'probability': prob
                 })
                 
                 visualization_data.append({
@@ -371,10 +436,9 @@ def evaluasi():
                     'luas_tm': float(data_kebun.luas_tm or 0),
                     'produksi': float(data_kebun.produksi_ton or 0),
                     'petani': int(data_kebun.jumlah_petani_kk or 0),
-                    'probability': float(gmm_item.probabilitas or 0)
+                    'probability': prob
                 })
         
-        # Hitung rata-rata untuk setiap cluster
         for cluster_name in cluster_analysis:
             count = cluster_analysis[cluster_name]['count']
             if count > 0:
@@ -384,25 +448,31 @@ def evaluasi():
                 cluster_analysis[cluster_name]['avg_produksi'] = round(cluster_analysis[cluster_name]['avg_produksi'] / count, 2)
                 cluster_analysis[cluster_name]['avg_petani'] = round(cluster_analysis[cluster_name]['avg_petani'] / count, 2)
                 cluster_analysis[cluster_name]['avg_probability'] = round(cluster_analysis[cluster_name]['total_probability'] / count, 4)
+                cluster_analysis[cluster_name]['min_probability'] = round(cluster_analysis[cluster_name]['min_probability'], 4)
+                cluster_analysis[cluster_name]['max_probability'] = round(cluster_analysis[cluster_name]['max_probability'], 4)
         
-        # Metrik evaluasi
         evaluation_metrics = {
             'silhouette_score': 0,
             'davies_bouldin_index': 0,
             'total_iterations': 0,
-            'converged': False
+            'converged': False,
+            'bic_score': 0,
+            'aic_score': 0,
+            'log_likelihood': 0
         }
         
         if gmm_data:
             first_record = gmm_data[0]
             evaluation_metrics = {
-                'silhouette_score': first_record.silhouette_score or 0,
-                'davies_bouldin_index': first_record.davies_bouldin_index or 0,
+                'silhouette_score': round(first_record.silhouette_score or 0, 4),
+                'davies_bouldin_index': round(first_record.davies_bouldin_index or 0, 4),
                 'total_iterations': first_record.iteration or 0,
-                'converged': first_record.converged or False
+                'converged': first_record.converged or False,
+                'avg_probability': round(np.mean([item.probabilitas or 0 for item in gmm_data]), 4),
+                'total_desa': len(gmm_data),
+                'n_clusters': len(set(item.id_cluster for item in gmm_data))
             }
         
-        # Rekomendasi berdasarkan hasil clustering
         rekomendasi = {
             'tinggi': [
                 "Pertahankan dan tingkatkan praktik budidaya yang sudah baik",

@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <div class="row mb-4">
                         <div class="col-lg-6 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100 info-card">
                                 <div class="card-header bg-primary text-white">
                                     <h5 class="card-title mb-0">
                                         <i class="fas fa-info-circle me-2"></i>
@@ -34,39 +34,39 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-sm-6 mb-3">
-                                            <div class="border-start border-primary border-4 ps-3">
+                                            <div class="border-start border-primary border-4 ps-3 info-item">
                                                 <small class="text-muted">ID Desa</small>
                                                 <div class="fw-bold fs-5">{{ data.gmm.id_desa }}</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-6 mb-3">
-                                            <div class="border-start border-success border-4 ps-3">
+                                            <div class="border-start border-success border-4 ps-3 info-item">
                                                 <small class="text-muted">Nama Desa</small>
                                                 <div class="fw-bold fs-5">{{ data.gmm.desa.nama_desa }}</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-6 mb-3">
-                                            <div class="border-start border-info border-4 ps-3">
+                                            <div class="border-start border-info border-4 ps-3 info-item">
                                                 <small class="text-muted">ID Clustering</small>
                                                 <div class="fw-bold fs-5">{{ data.gmm.id_clustering }}</div>
                                             </div>
                                         </div>
                                         <div class="col-sm-6 mb-3">
-                                            <div class="border-start border-warning border-4 ps-3">
+                                            <div class="border-start border-warning border-4 ps-3 info-item">
                                                 <small class="text-muted">Cluster Assignment</small>
                                                 <div class="fw-bold fs-5">
                                                     {% if 'Tinggi' in data.gmm.cluster.nama_cluster %}
-                                                        <span class="badge bg-success fs-6">
+                                                        <span class="badge bg-success fs-6 cluster-badge">
                                                             <i class="fas fa-arrow-up me-1"></i>
                                                             {{ data.gmm.cluster.nama_cluster }}
                                                         </span>
                                                     {% elif 'Menengah' in data.gmm.cluster.nama_cluster %}
-                                                        <span class="badge bg-warning fs-6">
+                                                        <span class="badge bg-warning fs-6 cluster-badge">
                                                             <i class="fas fa-minus me-1"></i>
                                                             {{ data.gmm.cluster.nama_cluster }}
                                                         </span>
                                                     {% else %}
-                                                        <span class="badge bg-danger fs-6">
+                                                        <span class="badge bg-danger fs-6 cluster-badge">
                                                             <i class="fas fa-arrow-down me-1"></i>
                                                             {{ data.gmm.cluster.nama_cluster }}
                                                         </span>
@@ -80,7 +80,7 @@
                         </div>
 
                         <div class="col-lg-6 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100 metric-card">
                                 <div class="card-header bg-success text-white">
                                     <h5 class="card-title mb-0">
                                         <i class="fas fa-chart-line me-2"></i>
@@ -91,9 +91,9 @@
                                     <div class="row">
                                         <div class="col-sm-6 mb-3">
                                             <div class="text-center">
-                                                <div class="position-relative d-inline-block">
+                                                <div class="position-relative d-inline-block gauge-container">
                                                     <canvas id="probabilityGauge" width="120" height="120"></canvas>
-                                                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                                    <div class="position-absolute top-50 start-50 translate-middle text-center gauge-text">
                                                         <div class="fw-bold">{{ "%.3f"|format(data.gmm.probabilitas) if data.gmm.probabilitas else "0.000" }}</div>
                                                         <small class="text-muted">Probabilitas</small>
                                                     </div>
@@ -106,7 +106,7 @@
                                                     <small class="text-muted">Iterasi</small>
                                                     <span class="badge bg-secondary">{{ data.gmm.iteration or 0 }}</span>
                                                 </div>
-                                                <div class="progress">
+                                                <div class="progress modern-progress">
                                                     <div class="progress-bar bg-secondary" 
                                                          role="progressbar" 
                                                          style="width: {{ (data.gmm.iteration / 100 * 100) if data.gmm.iteration else 0 }}%">
@@ -117,11 +117,11 @@
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <small class="text-muted">Status Konvergensi</small>
                                                     {% if data.gmm.converged %}
-                                                        <span class="badge bg-success">
+                                                        <span class="badge bg-success status-badge">
                                                             <i class="fas fa-check me-1"></i>Konvergen
                                                         </span>
                                                     {% else %}
-                                                        <span class="badge bg-warning">
+                                                        <span class="badge bg-warning status-badge">
                                                             <i class="fas fa-times me-1"></i>Tidak Konvergen
                                                         </span>
                                                     {% endif %}
@@ -132,13 +132,13 @@
                                                     <small class="text-muted">Kualitas Assignment</small>
                                                     {% set prob_value = data.gmm.probabilitas or 0 %}
                                                     {% if prob_value > 0.8 %}
-                                                        <span class="badge bg-success">Sangat Tinggi</span>
+                                                        <span class="badge bg-success quality-badge">Sangat Tinggi</span>
                                                     {% elif prob_value > 0.6 %}
-                                                        <span class="badge bg-info">Tinggi</span>
+                                                        <span class="badge bg-info quality-badge">Tinggi</span>
                                                     {% elif prob_value > 0.4 %}
-                                                        <span class="badge bg-warning">Sedang</span>
+                                                        <span class="badge bg-warning quality-badge">Sedang</span>
                                                     {% else %}
-                                                        <span class="badge bg-danger">Rendah</span>
+                                                        <span class="badge bg-danger quality-badge">Rendah</span>
                                                     {% endif %}
                                                 </div>
                                             </div>
@@ -151,7 +151,7 @@
 
                     <div class="row mb-4">
                         <div class="col-12">
-                            <div class="card">
+                            <div class="card vector-card">
                                 <div class="card-header bg-warning text-dark">
                                     <h5 class="card-title mb-0">
                                         <i class="fas fa-vector-square me-2"></i>
@@ -163,9 +163,9 @@
                                         <div class="row">
                                             {% for feature_name in data.feature_names %}
                                             <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
-                                                <div class="card bg-light h-100">
+                                                <div class="card bg-light h-100 feature-card">
                                                     <div class="card-body text-center">
-                                                        <div class="mb-2">
+                                                        <div class="mb-2 feature-icon">
                                                             {% if feature_name == 'Luas TBM' %}
                                                                 <i class="fas fa-seedling text-info fa-2x"></i>
                                                             {% elif feature_name == 'Luas TM' %}
@@ -189,7 +189,7 @@
                                             {% endfor %}
                                         </div>
                                         
-                                        <div class="mt-4">
+                                        <div class="mt-4 chart-container">
                                             <canvas id="meanVectorChart" width="400" height="200"></canvas>
                                         </div>
                                     {% else %}
@@ -205,14 +205,14 @@
 
                     <div class="row mb-4">
                         <div class="col-12">
-                            <div class="card">
+                            <div class="card covariance-card">
                                 <div class="card-header bg-secondary text-white">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h5 class="card-title mb-0">
                                             <i class="fas fa-th me-2"></i>
                                             Covariance Matrix (Matriks Kovarian)
                                         </h5>
-                                        <button class="btn btn-light btn-sm" data-bs-toggle="collapse" data-bs-target="#covarianceMatrix">
+                                        <button class="btn btn-light btn-sm toggle-btn" data-bs-toggle="collapse" data-bs-target="#covarianceMatrix">
                                             <i class="fas fa-eye me-1"></i>Toggle View
                                         </button>
                                     </div>
@@ -232,7 +232,7 @@
                                             </div>
                                             
                                             <div class="table-responsive">
-                                                <table class="table table-bordered table-hover">
+                                                <table class="table table-bordered table-hover covariance-table">
                                                     <thead class="table-dark">
                                                         <tr>
                                                             <th>Fitur</th>
@@ -246,7 +246,7 @@
                                                         <tr>
                                                             <td class="fw-bold bg-light">{{ data.feature_names[i] }}</td>
                                                             {% for j in range(data.feature_names|length) %}
-                                                            <td class="text-center {% if i == j %}bg-warning bg-opacity-25{% endif %}">
+                                                            <td class="text-center {% if i == j %}bg-warning bg-opacity-25{% endif %} matrix-cell">
                                                                 {% if i < data.covariance_matrix|length and j < data.covariance_matrix[i]|length %}
                                                                     {{ "%.4f"|format(data.covariance_matrix[i][j]) }}
                                                                 {% else %}
@@ -260,7 +260,7 @@
                                                 </table>
                                             </div>
 
-                                            <div class="mt-3">
+                                            <div class="mt-3 chart-container">
                                                 <canvas id="covarianceHeatmap" width="400" height="300"></canvas>
                                             </div>
                                         </div>
@@ -277,7 +277,7 @@
 
                     <div class="row">
                         <div class="col-12">
-                            <div class="card">
+                            <div class="card recommendation-card">
                                 <div class="card-header bg-dark text-white">
                                     <h5 class="card-title mb-0">
                                         <i class="fas fa-lightbulb me-2"></i>
@@ -291,7 +291,7 @@
                                                 <i class="fas fa-chart-line me-2"></i>
                                                 Analisis Clustering
                                             </h6>
-                                            <div class="card bg-light">
+                                            <div class="card bg-light analysis-card">
                                                 <div class="card-body">
                                                     <p class="mb-2">
                                                         <strong>Desa {{ data.gmm.desa.nama_desa }}</strong> telah diklasifikasikan ke dalam cluster 
@@ -301,22 +301,22 @@
                                                     
                                                     {% set prob_value = data.gmm.probabilitas or 0 %}
                                                     {% if prob_value > 0.8 %}
-                                                        <div class="alert alert-success">
+                                                        <div class="alert alert-success classification-alert">
                                                             <i class="fas fa-check-circle me-2"></i>
                                                             <strong>Klasifikasi Sangat Baik:</strong> Desa ini memiliki karakteristik yang sangat sesuai dengan cluster yang ditentukan.
                                                         </div>
                                                     {% elif prob_value > 0.6 %}
-                                                        <div class="alert alert-info">
+                                                        <div class="alert alert-info classification-alert">
                                                             <i class="fas fa-info-circle me-2"></i>
                                                             <strong>Klasifikasi Baik:</strong> Desa ini memiliki karakteristik yang sesuai dengan cluster yang ditentukan.
                                                         </div>
                                                     {% elif prob_value > 0.4 %}
-                                                        <div class="alert alert-warning">
+                                                        <div class="alert alert-warning classification-alert">
                                                             <i class="fas fa-exclamation-circle me-2"></i>
                                                             <strong>Klasifikasi Sedang:</strong> Desa ini memiliki karakteristik campuran, perlu perhatian khusus.
                                                         </div>
                                                     {% else %}
-                                                        <div class="alert alert-danger">
+                                                        <div class="alert alert-danger classification-alert">
                                                             <i class="fas fa-times-circle me-2"></i>
                                                             <strong>Klasifikasi Rendah:</strong> Desa ini mungkin memerlukan evaluasi ulang atau intervensi khusus.
                                                         </div>
@@ -330,61 +330,61 @@
                                                 <i class="fas fa-tasks me-2"></i>
                                                 Rekomendasi Tindakan
                                             </h6>
-                                            <div class="card bg-light">
+                                            <div class="card bg-light recommendation-list">
                                                 <div class="card-body">
                                                     {% if 'Tinggi' in data.gmm.cluster.nama_cluster %}
                                                         <ul class="list-unstyled">
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-star text-warning me-2"></i>
                                                                 Pertahankan praktik budidaya yang sudah baik
                                                             </li>
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-graduation-cap text-primary me-2"></i>
                                                                 Jadikan sebagai desa percontohan
                                                             </li>
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-arrow-up text-success me-2"></i>
                                                                 Fokus pada peningkatan kualitas produk
                                                             </li>
-                                                            <li class="mb-0">
+                                                            <li class="mb-0 recommendation-item">
                                                                 <i class="fas fa-handshake text-info me-2"></i>
                                                                 Kembangkan kemitraan pemasaran
                                                             </li>
                                                         </ul>
                                                     {% elif 'Menengah' in data.gmm.cluster.nama_cluster %}
                                                         <ul class="list-unstyled">
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-tools text-primary me-2"></i>
                                                                 Tingkatkan teknik budidaya
                                                             </li>
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-seedling text-success me-2"></i>
                                                                 Sediakan bibit unggul bersubsidi
                                                             </li>
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-users text-info me-2"></i>
                                                                 Bentuk kelompok tani
                                                             </li>
-                                                            <li class="mb-0">
+                                                            <li class="mb-0 recommendation-item">
                                                                 <i class="fas fa-tint text-primary me-2"></i>
                                                                 Perbaiki sistem irigasi
                                                             </li>
                                                         </ul>
                                                     {% else %}
                                                         <ul class="list-unstyled">
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-bullhorn text-danger me-2"></i>
                                                                 Intervensi khusus diperlukan
                                                             </li>
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-chalkboard-teacher text-warning me-2"></i>
                                                                 Pelatihan intensif dari dasar
                                                             </li>
-                                                            <li class="mb-2">
+                                                            <li class="mb-2 recommendation-item">
                                                                 <i class="fas fa-hand-holding-usd text-success me-2"></i>
                                                                 Bantuan finansial dan input
                                                             </li>
-                                                            <li class="mb-0">
+                                                            <li class="mb-0 recommendation-item">
                                                                 <i class="fas fa-road text-primary me-2"></i>
                                                                 Perbaikan infrastruktur menyeluruh
                                                             </li>
@@ -564,25 +564,191 @@ document.addEventListener('DOMContentLoaded', function() {
 .card {
     transition: all 0.3s ease;
     border: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+}
+
+.card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.info-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+}
+
+.metric-card {
+    background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(255,255,255,0.95) 100%);
+}
+
+.vector-card {
+    background: linear-gradient(135deg, rgba(255,252,243,0.95) 0%, rgba(255,255,255,0.95) 100%);
+}
+
+.covariance-card {
+    background: linear-gradient(135deg, rgba(248,249,250,0.95) 0%, rgba(255,255,255,0.95) 100%);
+}
+
+.recommendation-card {
+    background: linear-gradient(135deg, rgba(33,37,41,0.95) 0%, rgba(52,58,64,0.95) 100%);
+}
+
+.info-item {
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background-color: rgba(0,0,0,0.05);
+    transform: translateX(5px);
+}
+
+.cluster-badge {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.cluster-badge:hover {
+    transform: scale(1.1);
+}
+
+.status-badge, .quality-badge {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.status-badge:hover, .quality-badge:hover {
+    transform: scale(1.05);
+}
+
+.gauge-container {
+    transition: all 0.3s ease;
+}
+
+.gauge-container:hover {
+    transform: scale(1.05);
+}
+
+.gauge-text {
+    z-index: 10;
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+}
+
+.feature-icon {
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.2);
+}
+
+.chart-container {
+    background: rgba(255,255,255,0.8);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.toggle-btn {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.covariance-table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.matrix-cell {
+    transition: all 0.3s ease;
+}
+
+.matrix-cell:hover {
+    background-color: rgba(13,110,253,0.1) !important;
+    transform: scale(1.05);
+}
+
+.analysis-card {
+    background: linear-gradient(135deg, rgba(248,250,252,1) 0%, rgba(255,255,255,1) 100%);
+    transition: all 0.3s ease;
+}
+
+.analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.recommendation-list {
+    background: linear-gradient(135deg, rgba(248,250,252,1) 0%, rgba(255,255,255,1) 100%);
+    transition: all 0.3s ease;
+}
+
+.recommendation-list:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.recommendation-item {
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.recommendation-item:hover {
+    background-color: rgba(0,0,0,0.05);
+    transform: translateX(5px);
+}
+
+.classification-alert {
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.classification-alert:hover {
+    transform: scale(1.02);
 }
 
 .border-start {
     border-left-width: 4px !important;
 }
 
-.progress {
+.modern-progress {
     height: 8px;
     border-radius: 10px;
+    background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.8s ease;
 }
 
 .badge {
     font-size: 0.75rem;
-    padding: 0.4em 0.6em;
+    padding: 0.5em 0.8em;
+    border-radius: 8px;
+    font-weight: 600;
 }
 
 .alert {
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
 .table-bordered th, .table-bordered td {
@@ -591,6 +757,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .bg-warning.bg-opacity-25 {
     background-color: rgba(255, 193, 7, 0.25) !important;
+}
+
+.btn {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 @media (max-width: 768px) {
@@ -602,10 +779,26 @@ document.addEventListener('DOMContentLoaded', function() {
         flex-direction: column;
         gap: 1rem;
     }
+    
+    .info-item {
+        margin-bottom: 1rem;
+    }
+    
+    .gauge-container {
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card .card-body {
+        padding: 1rem;
+    }
+    
+    .chart-container {
+        padding: 15px;
+    }
 }
 
 @media print {
-    .btn, .card-footer, .collapse {
+    .btn, .card-footer, .collapse, .toggle-btn {
         display: none !important;
     }
     
@@ -613,10 +806,19 @@ document.addEventListener('DOMContentLoaded', function() {
         box-shadow: none !important;
         border: 1px solid #dee2e6 !important;
         page-break-inside: avoid;
+        transform: none !important;
+    }
+    
+    .card:hover {
+        transform: none !important;
     }
     
     .show {
         display: block !important;
+    }
+    
+    .feature-card, .info-item, .recommendation-item {
+        transform: none !important;
     }
 }
 </style>
